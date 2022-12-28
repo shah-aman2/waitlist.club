@@ -60,10 +60,10 @@ export default function Login() {
           src="/logo.png"
         />
         <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-          Platforms Starter Kit
+          WAITLIST.CLUB
         </h2>
         <p className="mt-2 text-center text-sm text-gray-600">
-          Build multi-tenant applications with custom domains. <br /> Read the{" "}
+          Build User Engaging  launch campaigns with utility NFTS. <br /> Read the{" "}
           <a
             className="font-medium text-black hover:text-gray-800"
             href="https://demo.vercel.pub/platforms-starter-kit"
@@ -77,7 +77,7 @@ export default function Login() {
 
       <div className="mt-8 mx-auto sm:w-full w-11/12 sm:max-w-md">
         <div className="bg-white py-8 px-4 shadow-md sm:rounded-lg sm:px-10">
-          <button
+          <button 
             disabled={loading}
             onClick={() => {
               setLoading(true);

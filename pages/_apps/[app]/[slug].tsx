@@ -162,13 +162,13 @@ export const getStaticPaths: GetStaticPaths<PathProps> = async () => {
     where: {
       published: true,
       // you can remove this if you want to generate all sites at build time
-      site: {
+      app: {
         subdomain: "demo",
       },
     },
     select: {
       slug: true,
-      site: {
+      app: {
         select: {
           subdomain: true,
           customDomain: true,
@@ -179,19 +179,19 @@ export const getStaticPaths: GetStaticPaths<PathProps> = async () => {
 
   return {
     paths: posts.flatMap((post) => {
-      if (post.site === null || post.site.subdomain === null) return [];
+      if (post.app  === null || post.app.subdomain === null) return [];
 
-      if (post.site.customDomain) {
+      if (post.app.customDomain) {
         return [
           {
             params: {
-              site: post.site.customDomain,
+              site: post.app.customDomain,
               slug: post.slug,
             },
           },
           {
             params: {
-              site: post.site.subdomain,
+              site: post.app.subdomain,
               slug: post.slug,
             },
           },
@@ -199,7 +199,7 @@ export const getStaticPaths: GetStaticPaths<PathProps> = async () => {
       } else {
         return {
           params: {
-            site: post.site.subdomain,
+            site: post.app.subdomain,
             slug: post.slug,
           },
         };
@@ -231,13 +231,13 @@ export const getStaticProps: GetStaticProps<PostProps, PathProps> = async ({
 
   const data = (await prisma.post.findFirst({
     where: {
-      site: {
+      app: {
         ...filter,
       },
       slug,
     },
     include: {
-      site: {
+      app: {
         include: {
           user: true,
         },
@@ -251,7 +251,7 @@ export const getStaticProps: GetStaticProps<PostProps, PathProps> = async ({
     getMdxSource(data.content!),
     prisma.post.findMany({
       where: {
-        site: {
+        app: {
           ...filter,
         },
         published: true,

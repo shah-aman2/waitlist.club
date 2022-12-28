@@ -4,10 +4,10 @@ import LoadingDots from "@/components/app/loading-dots";
 import { fetcher } from "@/lib/fetcher";
 import { HttpMethod } from "@/types";
 
-import type { Site } from "@prisma/client";
+import type { Application } from "@prisma/client";
 
 type DomainData = Pick<
-  Site,
+  Application,
   | "customDomain"
   | "description"
   | "id"
@@ -22,7 +22,7 @@ interface DomainCardProps<T = DomainData> {
 }
 
 export default function DomainCard({ data }: DomainCardProps) {
-  const { data: valid, isValidating } = useSWR<Site>(
+  const { data: valid, isValidating } = useSWR<Application>(
     `/api/domain/check?domain=${data.customDomain}`,
     fetcher,
     { revalidateOnMount: true, refreshInterval: 5000 }
@@ -80,14 +80,14 @@ export default function DomainCard({ data }: DomainCardProps) {
             onClick={async () => {
               setRemoving(true);
               await fetch(
-                `/api/domain?domain=${data.customDomain}&siteId=${data.id}`,
+                `/api/domain?domain=${data.customDomain}&appId=${data.id}`,
                 {
                   method: HttpMethod.DELETE,
                 }
               ).then((res) => {
                 setRemoving(false);
                 if (res.ok) {
-                  mutate(`/api/site?siteId=${data.id}`);
+                  mutate(`/api/app?appId=${data.id}`);
                 } else {
                   alert("Error removing domain");
                 }

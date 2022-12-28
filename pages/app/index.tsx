@@ -12,7 +12,7 @@ import { fetcher } from "@/lib/fetcher";
 import { HttpMethod } from "@/types";
 
 import type { FormEvent } from "react";
-import type { Site } from "@prisma/client";
+import type { Application } from "@prisma/client";
 
 export default function AppIndex() {
   const [showModal, setShowModal] = useState<boolean>(false);
@@ -47,13 +47,13 @@ export default function AppIndex() {
   const { data: session } = useSession();
   const sessionId = session?.user?.id;
 
-  const { data: sites } = useSWR<Array<Site>>(
-    sessionId && `/api/site`,
+  const { data: sites } = useSWR<Array<Application>>(
+    sessionId && `/api/app`,
     fetcher
   );
 
   async function createSite(e: FormEvent<HTMLFormElement>) {
-    const res = await fetch("/api/site", {
+    const res = await fetch("/api/app", {
       method: HttpMethod.POST,
       headers: {
         "Content-Type": "application/json",
@@ -82,7 +82,7 @@ export default function AppIndex() {
           }}
           className="inline-block w-full max-w-md pt-8 overflow-hidden text-center align-middle transition-all bg-white shadow-xl rounded-lg"
         >
-          <h2 className="font-cal text-2xl mb-6">Create a New Site</h2>
+          <h2 className="font-cal text-2xl mb-6">Create a New Application</h2>
           <div className="grid gap-y-5 w-5/6 mx-auto">
             <div className="border border-gray-700 rounded-lg flex flex-start items-center">
               <span className="pl-5 pr-1">📌</span>
@@ -156,12 +156,12 @@ export default function AppIndex() {
 
       <div className="py-20 max-w-screen-xl mx-auto px-10 sm:px-20">
         <div className="flex flex-col sm:flex-row space-y-5 sm:space-y-0 justify-between items-center">
-          <h1 className="font-cal text-5xl">My Sites</h1>
+          <h1 className="font-cal text-5xl">My APPS</h1>
           <button
             onClick={() => setShowModal(true)}
             className="font-cal text-lg w-3/4 sm:w-40 tracking-wide text-white bg-black border-black border-2 px-5 py-3 hover:bg-white hover:text-black transition-all ease-in-out duration-150"
           >
-            New Site <span className="ml-2">＋</span>
+            New App <span className="ml-2">＋</span>
           </button>
         </div>
         <div className="my-10 grid gap-y-10">
@@ -216,7 +216,7 @@ export default function AppIndex() {
                 </div>
                 <div className="text-center">
                   <p className="text-2xl font-cal text-gray-600">
-                    No sites yet. Click &quot;New Site&quot; to create one.
+                    No apps yet. Click &quot;New App&quot; to create one.
                   </p>
                 </div>
               </>

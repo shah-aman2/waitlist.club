@@ -9,11 +9,11 @@ import LoadingDots from "@/components/app/loading-dots";
 import { fetcher } from "@/lib/fetcher";
 import { HttpMethod } from "@/types";
 
-import type { Post, Site } from "@prisma/client";
+import type { Post, Application } from "@prisma/client";
 
 interface SitePostData {
   posts: Array<Post>;
-  site: Site | null;
+  site: Application | null;
 }
 
 export default function SiteIndex() {

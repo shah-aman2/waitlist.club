@@ -1,4 +1,4 @@
-import { createApp, deleteApp, getApp, updateApp } from "@/lib/api";
+import { createCampaign, deleteCampaign, getCampaign, updateCampaign } from "@/lib/api";
 import { unstable_getServerSession } from "next-auth/next";
 
 import { authOptions } from "./auth/[...nextauth]";
@@ -6,19 +6,19 @@ import { HttpMethod } from "@/types";
 
 import type { NextApiRequest, NextApiResponse } from "next";
 
-export default async function site(req: NextApiRequest, res: NextApiResponse) {
+export default async function post(req: NextApiRequest, res: NextApiResponse) {
   const session = await unstable_getServerSession(req, res, authOptions);
   if (!session) return res.status(401).end();
 
   switch (req.method) {
     case HttpMethod.GET:
-      return getApp(req, res, session);
+      return getCampaign(req, res, session);
     case HttpMethod.POST:
-      return createApp(req, res);
+      return createCampaign(req, res, session);
     case HttpMethod.DELETE:
-      return deleteApp(req, res);
+      return deleteCampaign(req, res, session);
     case HttpMethod.PUT:
-      return updateApp(req, res);
+      return updateCampaign(req, res, session);
     default:
       res.setHeader("Allow", [
         HttpMethod.GET,

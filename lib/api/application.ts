@@ -4,7 +4,7 @@ import { unstable_getServerSession } from "next-auth/next";
 import { authOptions } from "pages/api/auth/[...nextauth]";
 import prisma from "@/lib/prisma";
 
-import type { Site } from ".prisma/client";
+import type { Application } from ".prisma/client";
 import type { Session } from "next-auth";
 import { placeholderBlurhash } from "../util";
 
@@ -19,14 +19,14 @@ import { placeholderBlurhash } from "../util";
  * @param res - Next.js API Response
  * @param session - NextAuth.js session
  */
-export async function getSite(
+export async function getApp(
   req: NextApiRequest,
   res: NextApiResponse,
   session: Session
-): Promise<void | NextApiResponse<Array<Site> | (Site | null)>> {
-  const { siteId } = req.query;
+): Promise<void | NextApiResponse<Array<Application> | (Application | null)>> {
+  const { appId } = req.query;
 
-  if (Array.isArray(siteId))
+  if (Array.isArray(appId))
     return res
       .status(400)
       .end("Bad request. siteId parameter cannot be an array.");
@@ -35,10 +35,10 @@ export async function getSite(
     return res.status(500).end("Server failed to get session user ID");
 
   try {
-    if (siteId) {
-      const settings = await prisma.site.findFirst({
+    if (appId) {
+      const settings = await prisma.application.findFirst({
         where: {
-          id: siteId,
+          id: appId,
           user: {
             id: session.user.id,
           },
@@ -48,7 +48,7 @@ export async function getSite(
       return res.status(200).json(settings);
     }
 
-    const sites = await prisma.site.findMany({
+    const apps = await prisma.application.findMany({
       where: {
         user: {
           id: session.user.id,
@@ -56,7 +56,7 @@ export async function getSite(
       },
     });
 
-    return res.status(200).json(sites);
+    return res.status(200).json(apps);
   } catch (error) {
     console.error(error);
     return res.status(500).end(error);
@@ -78,7 +78,7 @@ export async function getSite(
  * @param req - Next.js API Request
  * @param res - Next.js API Response
  */
-export async function createSite(
+export async function createApp(
   req: NextApiRequest,
   res: NextApiResponse
 ): Promise<void | NextApiResponse<{
@@ -89,7 +89,7 @@ export async function createSite(
   const sub = subdomain.replace(/[^a-zA-Z0-9/-]+/g, "");
 
   try {
-    const response = await prisma.site.create({
+    const response = await prisma.application.create({
       data: {
         name: name,
         description: description,
@@ -123,29 +123,29 @@ export async function createSite(
  * @param req - Next.js API Request
  * @param res - Next.js API Response
  */
-export async function deleteSite(
+export async function deleteApp(
   req: NextApiRequest,
   res: NextApiResponse
 ): Promise<void | NextApiResponse> {
   const session = await unstable_getServerSession(req, res, authOptions);
   if (!session?.user.id) return res.status(401).end("Unauthorized");
-  const { siteId } = req.query;
+  const { appId } = req.query;
 
-  if (!siteId || typeof siteId !== "string") {
+  if (!appId || typeof appId !== "string") {
     return res.status(400).json({ error: "Missing or misconfigured site ID" });
   }
 
-  const site = await prisma.site.findFirst({
+  const app = await prisma.application.findFirst({
     where: {
-      id: siteId,
+      id: appId,
       user: {
         id: session.user.id,
       },
     },
   });
-  if (!site) return res.status(404).end("Site not found");
+  if (!app) return res.status(404).end("Site not found");
 
-  if (Array.isArray(siteId))
+  if (Array.isArray(appId))
     return res
       .status(400)
       .end("Bad request. siteId parameter cannot be an array.");
@@ -154,14 +154,14 @@ export async function deleteSite(
     await prisma.$transaction([
       prisma.post.deleteMany({
         where: {
-          site: {
-            id: siteId,
+          app: {
+            id: appId,
           },
         },
       }),
-      prisma.site.delete({
+      prisma.application.delete({
         where: {
-          id: siteId,
+          id: appId,
         },
       }),
     ]);
@@ -188,10 +188,10 @@ export async function deleteSite(
  * @param req - Next.js API Request
  * @param res - Next.js API Response
  */
-export async function updateSite(
+export async function updateApp(
   req: NextApiRequest,
   res: NextApiResponse
-): Promise<void | NextApiResponse<Site>> {
+): Promise<void | NextApiResponse<Application>> {
   const session = await unstable_getServerSession(req, res, authOptions);
   if (!session?.user.id) return res.status(401).end("Unauthorized");
 
@@ -202,7 +202,7 @@ export async function updateSite(
     return res.status(400).json({ error: "Missing or misconfigured site ID" });
   }
 
-  const site = await prisma.site.findFirst({
+  const site = await prisma.application.findFirst({
     where: {
       id,
       user: {
@@ -216,7 +216,7 @@ export async function updateSite(
   const subdomain = sub.length > 0 ? sub : currentSubdomain;
 
   try {
-    const response = await prisma.site.update({
+    const response = await prisma.application.update({
       where: {
         id: id,
       },

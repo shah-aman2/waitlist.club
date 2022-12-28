@@ -8,7 +8,7 @@ import type { Meta, WithChildren } from "@/types";
 
 interface LayoutProps extends WithChildren {
   meta?: Meta;
-  siteId?: string;
+  appId?: string;
   subdomain?: string;
 }
 

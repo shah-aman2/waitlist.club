@@ -111,7 +111,7 @@ export default function Layout({ siteId, children }: LayoutProps) {
                 tab == "" ? "border-black" : "border-transparent"
               } py-3`}
             >
-              My Sites
+              My APPS
             </Link>
             <Link
               href="/settings"

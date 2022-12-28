@@ -8,7 +8,7 @@ import Date from "@/components/Date";
 import prisma from "@/lib/prisma";
 
 import type { GetStaticPaths, GetStaticProps } from "next";
-import type { _SiteData, Meta } from "@/types";
+import type { _AppData, Meta } from "@/types";
 import type { ParsedUrlQuery } from "querystring";
 import { placeholderBlurhash } from "@/lib/util";
 
@@ -24,13 +24,10 @@ export default function Index({ stringifiedData }: IndexProps) {
   const router = useRouter();
   if (router.isFallback) return <Loader />;
 
-  const data = JSON.parse(stringifiedData) as _SiteData;
+  const data = JSON.parse(stringifiedData) as _AppData;
 
   const meta = {
-    title: data.name,
-    description: data.description,
-    logo: "/logo.png",
-    ogImage: data.image,
+    name: data.name,
     ogUrl: data.customDomain
       ? data.customDomain
       : `https://${data.subdomain}.vercel.pub`,
@@ -126,7 +123,7 @@ export default function Index({ stringifiedData }: IndexProps) {
 
 export const getStaticPaths: GetStaticPaths<PathProps> = async () => {
   const [subdomains, customDomains] = await Promise.all([
-    prisma.site.findMany({
+    prisma.application.findMany({
       // you can remove this if you want to generate all sites at build time
       where: {
         subdomain: "demo",
@@ -135,7 +132,7 @@ export const getStaticPaths: GetStaticPaths<PathProps> = async () => {
         subdomain: true,
       },
     }),
-    prisma.site.findMany({
+    prisma.application.findMany({
       where: {
         NOT: {
           customDomain: null,
@@ -184,7 +181,7 @@ export const getStaticProps: GetStaticProps<IndexProps, PathProps> = async ({
     };
   }
 
-  const data = (await prisma.site.findUnique({
+  const data = (await prisma.application.findUnique({
     where: filter,
     include: {
       user: true,
@@ -199,7 +196,7 @@ export const getStaticProps: GetStaticProps<IndexProps, PathProps> = async ({
         ],
       },
     },
-  })) as _SiteData;
+  })) as _AppData;
 
   if (!data) return { notFound: true, revalidate: 10 };
 

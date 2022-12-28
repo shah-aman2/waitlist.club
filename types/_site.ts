@@ -1,4 +1,4 @@
-import type { Post, Site, User } from "@prisma/client";
+import type { Application, Campaign, Post, User } from "@prisma/client";
 
 export interface AdjacentPost
   extends Pick<
@@ -6,15 +6,16 @@ export interface AdjacentPost
     "createdAt" | "description" | "image" | "imageBlurhash" | "slug" | "title"
   > {}
 
-export interface _SiteData extends Site {
+export interface _AppData extends Application {
   user: User | null;
   posts: Array<Post>;
+  campaigns: Array<Campaign>;
 }
 
 export interface _SiteSlugData extends Post {
-  site: _SiteSite | null;
+  site: _AppApp | null;
 }
 
-interface _SiteSite extends Site {
+interface _AppApp extends Application {
   user: User | null;
 }

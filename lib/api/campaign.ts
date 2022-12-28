@@ -3,15 +3,15 @@ import prisma from "@/lib/prisma";
 import { NextApiRequest, NextApiResponse } from "next";
 import { unstable_getServerSession } from "next-auth/next";
 import { authOptions } from "pages/api/auth/[...nextauth]";
-import type { Post, Application } from ".prisma/client";
+import type { Campaign, Application , CampaignType} from ".prisma/client";
 import type { Session } from "next-auth";
 import { revalidate } from "@/lib/revalidate";
 import { getBlurDataURL, placeholderBlurhash } from "@/lib/util";
 
 import type { WithSitePost } from "@/types";
 
-interface AllPosts {
-  posts: Array<Post>;
+interface AllCampaign {
+  campaigns: Array<Campaign>;
   app: Application | null;
 }
 
@@ -25,26 +25,26 @@ interface AllPosts {
  * @param req - Next.js API Request
  * @param res - Next.js API Response
  */
-export async function getPost(
+export async function getCampaign(
   req: NextApiRequest,
   res: NextApiResponse,
   session: Session
-): Promise<void | NextApiResponse<AllPosts | (WithSitePost | null)>> {
-  const { postId, siteId, published } = req.query;
+): Promise<void | NextApiResponse<AllCampaign | (WithSitePost | null)>> {
+  const { campaignId, appId, published } = req.query;
 
   if (
-    Array.isArray(postId) ||
-    Array.isArray(siteId) ||
+    Array.isArray(campaignId) ||
+    Array.isArray(appId) ||
     Array.isArray(published) ||
     !session.user.id
   )
     return res.status(400).end("Bad request. Query parameters are not valid.");
 
   try {
-    if (postId) {
-      const post = await prisma.post.findFirst({
+    if (campaignId) {
+      const post = await prisma.campaign.findFirst({
         where: {
-          id: postId,
+          id: campaignId,
           app: {
             user: {
               id: session.user.id,
@@ -59,21 +59,21 @@ export async function getPost(
       return res.status(200).json(post);
     }
 
-    const site = await prisma.application.findFirst({
+    const app = await prisma.application.findFirst({
       where: {
-        id: siteId,
+        id: campaignId,
         user: {
           id: session.user.id,
         },
       },
     });
 
-    const posts = !site
+    const campaigns = !app
       ? []
       : await prisma.post.findMany({
           where: {
             app: {
-              id: siteId,
+              id: appId,
             },
             published: JSON.parse(published || "true"),
           },
@@ -83,8 +83,8 @@ export async function getPost(
         });
 
     return res.status(200).json({
-      posts,
-      site,
+      campaigns,
+      app,
     });
   } catch (error) {
     console.error(error);
@@ -93,7 +93,7 @@ export async function getPost(
 }
 
 /**
- * Create Post
+ * Create campaign
  *
  * Creates a new post from a provided `siteId` query parameter.
  *
@@ -102,46 +102,48 @@ export async function getPost(
  * @param req - Next.js API Request
  * @param res - Next.js API Response
  */
-export async function createPost(
+export async function createCampaign(
   req: NextApiRequest,
   res: NextApiResponse,
   session: Session
 ): Promise<void | NextApiResponse<{
-  postId: string;
+    campaignId: string;
 }>> {
-  const { siteId } = req.query;
+  const { appId } = req.query;
 
-  if (!siteId || typeof siteId !== "string" || !session?.user?.id) {
+  if (!appId || typeof appId !== "string" || !session?.user?.id) {
     return res
       .status(400)
-      .json({ error: "Missing or misconfigured site ID or session ID" });
+      .json({ error: "Missing or misconfigured app ID or session ID" });
   }
 
-  const site = await prisma.application.findFirst({
+  const app = await prisma.application.findFirst({
     where: {
-      id: siteId,
+      id: appId,
       user: {
         id: session.user.id,
       },
     },
   });
-  if (!site) return res.status(404).end("Site not found");
+  if (!app) return res.status(404).end("app not found");
 
   try {
-    const response = await prisma.post.create({
+
+    const {name,campaignType} = req.body;
+    const response = await prisma.campaign.create({
       data: {
-        image: `/placeholder.png`,
-        imageBlurhash: placeholderBlurhash,
+          name,
+          campaignType,
         app: {
           connect: {
-            id: siteId,
+            id: appId,
           },
         },
       },
     });
 
     return res.status(201).json({
-      postId: response.id,
+      campaignId: response.id,
     });
   } catch (error) {
     console.error(error);
@@ -158,24 +160,24 @@ export async function createPost(
  * @param req - Next.js API Request
  * @param res - Next.js API Response
  */
-export async function deletePost(
+export async function deleteCampaign(
   req: NextApiRequest,
   res: NextApiResponse,
   session: Session
 ): Promise<void | NextApiResponse> {
-  const { postId } = req.query;
+  const { campaignId } = req.query;
 
-  if (!postId || typeof postId !== "string" || !session?.user?.id) {
+  if (!campaignId || typeof campaignId !== "string" || !session?.user?.id) {
     return res
       .status(400)
       .json({ error: "Missing or misconfigured site ID or session ID" });
   }
 
-  const site = await prisma.application.findFirst({
+  const app = await prisma.application.findFirst({
     where: {
-      posts: {
+      campaign: {
         some: {
-          id: postId,
+          id: campaignId,
         },
       },
       user: {
@@ -183,12 +185,12 @@ export async function deletePost(
       },
     },
   });
-  if (!site) return res.status(404).end("Site not found");
+  if (!app) return res.status(404).end("Site not found");
 
   try {
-    const response = await prisma.post.delete({
+    const response = await prisma.campaign.delete({
       where: {
-        id: postId,
+        id: campaignId,
       },
       include: {
         app: {
@@ -201,7 +203,7 @@ export async function deletePost(
       await revalidate(
         `https://${response.app?.subdomain}.vercel.pub`, // hostname to be revalidated
         response.app.subdomain, // siteId
-        response.slug // slugname for the post
+        response.name, // slugname for the post
       );
     }
     if (response?.app?.customDomain)
@@ -209,7 +211,7 @@ export async function deletePost(
       await revalidate(
         `https://${response.app.customDomain}`, // hostname to be revalidated
         response.app.customDomain, // siteId
-        response.slug // slugname for the post
+        response.name// slugname for the post
       );
 
     return res.status(200).end();
@@ -236,21 +238,22 @@ export async function deletePost(
  * @param req - Next.js API Request
  * @param res - Next.js API Response
  */
-export async function updatePost(
+export async function updateCampaign(
   req: NextApiRequest,
   res: NextApiResponse,
   session: Session
-): Promise<void | NextApiResponse<Post>> {
+): Promise<void | NextApiResponse<Campaign>> {
   const {
     id,
-    title,
-    description,
-    content,
-    slug,
-    image,
-    published,
+    name,
+    maxNumber ,
+    campaignLastDate ,
+    campaignType,
+    isActive,
     subdomain,
-    customDomain,
+    customDomain
+    
+    
   } = req.body;
 
   if (!id || typeof id !== "string" || !session?.user?.id) {
@@ -259,9 +262,9 @@ export async function updatePost(
       .json({ error: "Missing or misconfigured site ID or session ID" });
   }
 
-  const site = await prisma.application.findFirst({
+  const app = await prisma.application.findFirst({
     where: {
-      posts: {
+      campaign: {
         some: {
           id,
         },
@@ -271,21 +274,20 @@ export async function updatePost(
       },
     },
   });
-  if (!site) return res.status(404).end("Site not found");
+  if (!app) return res.status(404).end("Site not found");
 
   try {
-    const post = await prisma.post.update({
+    const campaign = await prisma.campaign.update({
       where: {
         id: id,
       },
       data: {
-        title,
-        description,
-        content,
-        slug,
-        image,
-        imageBlurhash: (await getBlurDataURL(image)) ?? undefined,
-        published,
+        name,
+        campaignType,
+        maxNumber,
+        campaignLastDate,
+        isActive,
+        
       },
     });
     if (subdomain) {
@@ -293,7 +295,7 @@ export async function updatePost(
       await revalidate(
         `https://${subdomain}.vercel.pub`, // hostname to be revalidated
         subdomain, // siteId
-        slug // slugname for the post
+        name // slugname for the post
       );
     }
     if (customDomain)
@@ -301,10 +303,10 @@ export async function updatePost(
       await revalidate(
         `https://${customDomain}`, // hostname to be revalidated
         customDomain, // siteId
-        slug // slugname for the post
+        name // slugname for the post
       );
 
-    return res.status(200).json(post);
+    return res.status(200).json(campaign);
   } catch (error) {
     console.error(error);
     return res.status(500).end(error);

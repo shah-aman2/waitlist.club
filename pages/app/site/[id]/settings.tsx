@@ -14,11 +14,11 @@ import Modal from "@/components/Modal";
 import { fetcher } from "@/lib/fetcher";
 import { HttpMethod } from "@/types";
 
-import type { Site } from "@prisma/client";
+import type { Application } from "@prisma/client";
 
 interface SettingsData
   extends Pick<
-    Site,
+    Application,
     | "id"
     | "name"
     | "description"
@@ -33,8 +33,8 @@ export default function SiteSettings() {
   const { id } = router.query;
   const siteId = id;
 
-  const { data: settings } = useSWR<Site | null>(
-    siteId && `/api/site?siteId=${siteId}`,
+  const { data: settings } = useSWR<Application | null>(
+    siteId && `/api/app?appId=${siteId}`,
     fetcher,
     {
       onError: () => router.push("/"),
@@ -66,7 +66,7 @@ export default function SiteSettings() {
     setSaving(true);
 
     try {
-      const response = await fetch("/api/site", {
+      const response = await fetch("/api/app", {
         method: HttpMethod.PUT,
         headers: {
           "Content-Type": "application/json",
@@ -80,7 +80,7 @@ export default function SiteSettings() {
 
       if (response.ok) {
         setSaving(false);
-        mutate(`/api/site?siteId=${siteId}`);
+        mutate(`/api/app?appId=${siteId}`);
         toast.success(`Changes Saved`);
       }
     } catch (error) {
@@ -95,7 +95,7 @@ export default function SiteSettings() {
     setDeletingSite(true);
 
     try {
-      const response = await fetch(`/api/site?siteId=${siteId}`, {
+      const response = await fetch(`/api/app?appId=${siteId}`, {
         method: HttpMethod.DELETE,
       });
 
@@ -153,7 +153,7 @@ export default function SiteSettings() {
           domain: customDomain,
         };
       setError(null);
-      mutate(`/api/site?siteId=${siteId}`);
+      mutate(`/api/app?appId=${siteId}`);
     } catch (error) {
       setError(error);
     } finally {
